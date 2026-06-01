@@ -25,6 +25,7 @@ const PRODUCTS = [
   { id: 3, name: "Inventory Management System", icon: "📦", price: 8000, orig: 15000, tag: null, desc: "Monitor stock levels, track movement and eliminate costly shortfalls. A smarter way to manage your inventory in real time." },
   { id: 4, name: "Sales Breakdown System", icon: "📈", price: 8000, orig: 15000, tag: "Incl. Marketing ROI", desc: "Total visibility into your sales, your team, your marketing and your customers — all from one daily log." },
   { id: 5, name: "HR & Payroll System", icon: "👥", price: 8000, orig: 15000, tag: null, desc: "Full payroll, payslips, leave tracking and salary advances — all automated from a single staff records sheet." },
+  { id: 6, name: "Customization + Training", icon: "🎓", price: 17000, orig: null, tag: "Service", desc: "Our team customizes any system to your exact business needs and trains your team to use it confidently from day one." },
 ];
 
 const PRODUCT_DETAILS = {
@@ -223,8 +224,6 @@ function ShareButton({ goldLight, borderGreen }) {
 export default function Fundametrics() {
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [coaching, setCoaching] = useState({});
-  const [bundleCoaching, setBundleCoaching] = useState(false);
   const [toast, setToast] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -234,30 +233,25 @@ export default function Fundametrics() {
 
   const notify = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2800); };
 
-  const addToCart = (product, withT) => {
-    const id = `${product.id}-${withT ? "t" : "b"}`;
-    const price = product.price + (withT ? TRAINING : 0);
-    const name = withT ? `${product.name} + Training` : product.name;
+  const addToCart = (product) => {
+    const id = `${product.id}`;
     setCart((prev) => {
       if (prev.find((i) => i.id === id)) {
         notify(`${product.name} is already in your cart`);
         return prev;
       }
-      return [...prev, { id, name, price, qty: 1 }];
+      return [...prev, { id, name: product.name, price: product.price, qty: 1 }];
     });
     if (!cart.find((i) => i.id === id)) notify(`${product.name} added to cart ✓`);
   };
 
-  const addBundle = (withT) => {
-    const id = `bundle-${withT ? "t" : "b"}`;
-    const price = BUNDLE + (withT ? TRAINING : 0);
-    const name = withT ? "Complete Bundle (5 Systems) + Training" : "Complete Bundle (5 Systems)";
+  const addBundle = () => {
     setCart((prev) => {
       if (prev.find((i) => i.id.startsWith("bundle"))) {
         notify("Bundle is already in your cart");
         return prev;
       }
-      return [...prev, { id, name, price, qty: 1 }];
+      return [...prev, { id: "bundle", name: "Complete Bundle (5 Systems)", price: BUNDLE, qty: 1 }];
     });
     if (!cart.find((i) => i.id.startsWith("bundle"))) notify("Complete Bundle added to cart ✓");
   };
@@ -303,6 +297,36 @@ export default function Fundametrics() {
   }, []);
 
   const scrollTo = (id) => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setMenuOpen(false); };
+
+  // FOMO toast
+  const KENYAN_NAMES = ["Wanjiku","Kamau","Njoroge","Wambua","Mutua","Mwangi","Achieng","Odhiambo","Wanjiru","Kariuki","Kimani","Gathoni","Nyambura","Githinji","Ndegwa","Waweru","Chebet","Koech","Langat","Makena","Njeri","Wairimu","Muthoni","Gitau","Kipchoge","Muigai","Muchiri","Moraa","Shiro","Awino"];
+  const OTHER_NAMES = ["Amara","Kofi","Zara","Tendai","Fatima","Emeka","Aisha","Kwame","Naledi","Sipho","Adaeze","Chidi","Seun","Nia","Tunde","Amina","Zanele","Jabari","Chiamaka","Damilola","Abena","Sekou","Yewande","Musa","Olumide","Sanaa","Kemi","Thabo","Ngozi","Babatunde","Akosua","Nadia","Lumumba","Chinwe","Dayo","Akua","Folake","Bongani","Titilayo","Razak","Imani","Jomo","Efua","Obinna","Miriam","Zainab","Kwabena","Adeola","Chinyere","Sade"];
+  const FOMO_PRODUCTS = ["Financial Management System","Agents & Commission System","Inventory Management System","Sales Breakdown System","HR & Payroll System","Complete Bundle"];
+  const [fomoToast, setFomoToast] = useState(null);
+
+  useEffect(() => {
+    let lastProduct = null;
+    let secondLastProduct = null;
+
+    const showFomo = () => {
+      // 2 out of 5 chance of Kenyan name
+      const useKenyan = Math.random() < 0.4;
+      const pool = useKenyan ? KENYAN_NAMES : OTHER_NAMES;
+      const name = pool[Math.floor(Math.random() * pool.length)];
+      let product;
+      do {
+        product = FOMO_PRODUCTS[Math.floor(Math.random() * FOMO_PRODUCTS.length)];
+      } while (product === lastProduct && product === secondLastProduct);
+      secondLastProduct = lastProduct;
+      lastProduct = product;
+      setFomoToast({ name, product });
+      setTimeout(() => setFomoToast(null), 4500);
+      setTimeout(showFomo, 45000 + Math.random() * 30000);
+    };
+
+    const initial = setTimeout(showFomo, 12000);
+    return () => clearTimeout(initial);
+  }, []);
 
   return (
     <div style={{ fontFamily: "'DM Sans', 'Helvetica Neue', Arial, sans-serif", background: C.cream, color: C.textDark, minHeight: "100vh", overflowX: "hidden" }}>
@@ -464,43 +488,33 @@ export default function Fundametrics() {
 
         <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 20 }}>
           {PRODUCTS.map((p) => {
-            const withT = !!coaching[p.id];
-            const total = p.price + (withT ? TRAINING : 0);
             return (
-              <div key={p.id} className="pcard">
+              <div key={p.id} className="pcard" style={p.id === 6 ? { background: C.darkGreen, border: `1px solid ${C.borderGreen}` } : {}}>
                 {p.id === 1 && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: C.gold, borderRadius: "6px 6px 0 0" }} />}
+                {p.id === 6 && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: C.goldLight, borderRadius: "6px 6px 0 0" }} />}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                   <span style={{ fontSize: 28 }}>{p.icon}</span>
-                  {p.tag && <span className="tag-pill">{p.tag}</span>}
+                  {p.tag && <span className="tag-pill" style={p.id === 6 ? { background: C.gold, color: "#fff" } : {}}>{p.tag}</span>}
                 </div>
-                <h3 className="serif" style={{ fontSize: 21, fontWeight: 500, color: C.textDark, marginBottom: 10, lineHeight: 1.2 }}>{p.name}</h3>
-                <p style={{ fontSize: 13, color: C.textMid, lineHeight: 1.75, marginBottom: 22, flex: 1 }}>{p.desc}</p>
+                <h3 className="serif" style={{ fontSize: 21, fontWeight: 500, color: p.id === 6 ? "#F5F0E8" : C.textDark, marginBottom: 10, lineHeight: 1.2 }}>{p.name}</h3>
+                <p style={{ fontSize: 13, color: p.id === 6 ? "rgba(245,240,232,.65)" : C.textMid, lineHeight: 1.75, marginBottom: 22, flex: 1 }}>{p.desc}</p>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-                  <span className="serif" style={{ fontSize: 24, fontWeight: 500, color: C.textDark }}>{fmt(p.price)}</span>
-                  <span className="price-orig">{fmt(p.orig)}</span>
-                  <span className="badge-off">47% Off</span>
+                  <span className="serif" style={{ fontSize: 24, fontWeight: 500, color: p.id === 6 ? C.goldLight : C.textDark }}>{fmt(p.price)}</span>
+                  {p.orig && <span className="price-orig">{fmt(p.orig)}</span>}
+                  {p.orig && <span className="badge-off">47% Off</span>}
                 </div>
 
-                <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "11px 12px", background: C.cream, border: `1px solid ${withT ? C.gold : C.border}`, marginBottom: 14, borderRadius: 5, transition: "border-color .2s" }}>
-                  <input type="checkbox" className="chk" checked={withT} onChange={(e) => setCoaching((prev) => ({ ...prev, [p.id]: e.target.checked }))} />
-                  <div>
-                    <div style={{ fontSize: 12.5, color: C.textDark, fontWeight: 500 }}>Add Customization + Training</div>
-                    <div style={{ fontSize: 11.5, color: C.textMuted, marginTop: 2 }}>+{fmt(TRAINING)} · tailored to your business</div>
-                  </div>
-                </label>
-
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                  <span style={{ fontSize: 12, color: C.textMuted }}>Total: <strong style={{ color: C.textDark, fontSize: 14 }}>{fmt(total)}</strong></span>
-                </div>
-
-                <button className="btn-dark" style={{ width: "100%" }} onClick={() => addToCart(p, withT)}>Add to Cart</button>
-                <button onClick={() => setSelectedProduct(p)} style={{ width: "100%", background: "none", border: `1px solid ${C.border}`, color: C.textMid, padding: "10px 0", fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase", cursor: "pointer", fontFamily: "inherit", marginTop: 8, borderRadius: 4, transition: "all .2s" }}
+                <button style={{ width: "100%", background: p.id === 6 ? C.gold : C.darkGreen, color: "#fff", border: "none", padding: "13px 0", fontSize: 12, fontWeight: 500, letterSpacing: ".1em", textTransform: "uppercase", cursor: "pointer", borderRadius: 4, fontFamily: "inherit", transition: "all .2s" }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = ".85"}
+                  onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+                  onClick={() => addToCart(p)}>Add to Cart</button>
+                {p.id !== 6 && <button onClick={() => setSelectedProduct(p)} style={{ width: "100%", background: "none", border: `1px solid ${C.border}`, color: C.textMid, padding: "10px 0", fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase", cursor: "pointer", fontFamily: "inherit", marginTop: 8, borderRadius: 4, transition: "all .2s" }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.color = C.gold; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.textMid; }}
                 >
                   See What's Inside →
-                </button>
+                </button>}
               </div>
             );
           })}
@@ -547,20 +561,12 @@ export default function Fundametrics() {
 
               <hr style={{ border: "none", borderTop: `1px solid ${C.border}`, margin: "0 0 18px" }} />
 
-              <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", background: C.cardBg, border: `1px solid ${bundleCoaching ? C.gold : C.border}`, marginBottom: 20, borderRadius: 5, transition: "border-color .2s" }}>
-                <input type="checkbox" className="chk" checked={bundleCoaching} onChange={(e) => setBundleCoaching(e.target.checked)} />
-                <div>
-                  <div style={{ fontSize: 13, color: C.textDark, fontWeight: 500 }}>Add Customization + Training</div>
-                  <div style={{ fontSize: 12, color: C.textMuted, marginTop: 3, lineHeight: 1.5 }}>+{fmt(TRAINING)} · our team customizes all 5 systems and trains your team</div>
-                </div>
-              </label>
-
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
                 <span style={{ fontSize: 13, color: C.textMuted }}>Total</span>
-                <strong className="serif" style={{ fontSize: 22, color: C.textDark }}>{fmt(BUNDLE + (bundleCoaching ? TRAINING : 0))}</strong>
+                <strong className="serif" style={{ fontSize: 22, color: C.textDark }}>{fmt(BUNDLE)}</strong>
               </div>
 
-              <button className="btn-dark" style={{ width: "100%", padding: "14px 0", fontSize: 13 }} onClick={() => addBundle(bundleCoaching)}>
+              <button className="btn-dark" style={{ width: "100%", padding: "14px 0", fontSize: 13 }} onClick={() => addBundle()}>
                 Add Bundle to Cart
               </button>
             </div>
@@ -615,7 +621,7 @@ export default function Fundametrics() {
               Built by Finance Professionals,{" "}<em style={{ color: C.gold }}>For Ambitious Businesses</em>
             </h2>
             <p style={{ color: C.textMid, lineHeight: 1.9, fontSize: 14.5, marginBottom: 28 }}>
-              Fundametrics is the product arm of Sara & Life — a corporate finance and advisory firm with deep experience across SME profitability, investment readiness and venture capital. Our systems are built from the real tools we use with clients daily, now available for your business to own and grow with.
+              Fundametrics is the product arm of Sara & Life — a corporate finance and advisory firm with deep experience across SME profitability and venture capital. Our systems are built from the real tools we use with clients daily, now available for your business to own and grow with.
             </p>
             <a href="https://saranlife.com" target="_blank" rel="noopener noreferrer" style={{ color: C.gold, fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", borderBottom: `1px solid ${C.gold}`, paddingBottom: 2 }}>
               Learn More About Sara & Life →
@@ -624,10 +630,10 @@ export default function Fundametrics() {
           <div style={{ background: C.darkGreen, padding: "36px 32px", borderRadius: 8 }}>
             <div style={{ color: C.goldLight, fontSize: 12, letterSpacing: ".18em", textTransform: "uppercase", marginBottom: 24 }}>Why Fundametrics?</div>
             {[
-              ["Finance-grade", "Built with the same rigour used in corporate finance engagements"],
-              ["Kenya-first", "Designed for Kenyan business realities — VAT, NHIF, NSSF, PAYE included"],
-              ["Instant access", "Unique download link delivered immediately after payment"],
-              ["Backed by experts", "Direct access to the Sara & Life team for customization and training"],
+              ["Buy once, use forever", "These systems are scalable to fit your needs now and in the future — no subscriptions, no renewals, no limits."],
+              ["Built from an investor-lens", "Sarah identified a real gap with SMEs across Sub-Saharan Africa where founders couldn't articulate their business metrics and left money on the table."],
+              ["User friendly", "You only input data on guided cells as you would with any other system. You do not need to be a Microsoft Excel expert."],
+              ["No hidden bugs", "Unlike most systems in the market, Microsoft Excel does not catch bugs silently — these systems are rigorously built and tested so what you see is always accurate."],
             ].map(([title, desc], i) => (
               <div key={i} style={{ display: "flex", gap: 14, padding: "14px 0", borderBottom: i < 3 ? `1px solid rgba(245,240,232,.08)` : "none" }}>
                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: C.gold, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
@@ -652,13 +658,17 @@ export default function Fundametrics() {
               Built From the <em style={{ color: C.goldLight }}>Inside Out</em>
             </h2>
             <p style={{ color: "rgba(245,240,232,.7)", lineHeight: 1.95, fontSize: 15, marginBottom: 16, fontStyle: "italic", borderLeft: `2px solid ${C.gold}`, paddingLeft: 20 }}>
-              "These systems were built from the inside out — drawn directly from my experience in venture capital, where I have sat across the table from founders and evaluated exactly what separates fundable businesses from the rest."
+              "I identified a real gap — founders across Sub-Saharan Africa were leaving money on the table simply because they couldn't articulate their own business metrics. These systems exist to change that."
             </p>
             <p style={{ color: "rgba(245,240,232,.65)", lineHeight: 1.9, fontSize: 14.5, marginBottom: 12 }}>
-              I can tell you with confidence: if you walked into a funding conversation carrying the metrics and data these tools generate, you would have a serious edge. Other factors matter, but running a structured, data-driven business is non-negotiable to any serious investor.
+              With over a decade of experience working with SMEs across the Sub-Saharan region, Sarah truly understands the gaps. These systems are built from that deep, on-the-ground knowledge — not theory.
             </p>
-            <p style={{ color: "rgba(245,240,232,.65)", lineHeight: 1.9, fontSize: 14.5, marginBottom: 32 }}>
-              This is my personal promise — if you are committed to your journey, these systems are where that journey begins.
+            <p style={{ color: "rgba(245,240,232,.65)", lineHeight: 1.9, fontSize: 14.5, marginBottom: 24 }}>
+              If you are committed to your journey, these systems are where that journey begins.
+            </p>
+            <p style={{ color: "rgba(245,240,232,.55)", lineHeight: 1.9, fontSize: 13.5, marginBottom: 32, fontStyle: "italic" }}>
+              Besides the Excel systems, if you need to speak to Sarah directly on how to optimize your business strategy,{" "}
+              <a href="https://saranlife.com" target="_blank" rel="noopener noreferrer" style={{ color: C.goldLight, borderBottom: `1px solid ${C.goldLight}50`, paddingBottom: 1 }}>click here</a>.
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
               <a href="https://saranlife.com" target="_blank" rel="noopener noreferrer"
@@ -680,10 +690,42 @@ export default function Fundametrics() {
                 style={{ width: "100%", maxWidth: 420, borderRadius: 8, display: "block", objectFit: "cover", objectPosition: "top" }}
               />
               <div style={{ position: "absolute", bottom: 20, left: 20, right: 20, background: "rgba(12,35,24,.85)", backdropFilter: "blur(8px)", borderRadius: 6, padding: "14px 18px", border: "1px solid rgba(245,240,232,.1)" }}>
-                <div className="serif" style={{ fontSize: 17, color: "#F5F0E8", fontWeight: 500, marginBottom: 2 }}>Sarah Kinya</div>
+                <div className="serif" style={{ fontSize: 17, color: "#F5F0E8", fontWeight: 500, marginBottom: 2 }}>Sarah Mburugu</div>
                 <div style={{ fontSize: 12, color: C.goldLight, letterSpacing: ".06em" }}>Founder, Sara & Life · VC & Corporate Finance</div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Socials Section ── */}
+      <section style={{ background: C.cream, borderTop: `1px solid ${C.border}`, padding: "60px 48px", textAlign: "center" }}>
+        <div style={{ maxWidth: 700, margin: "0 auto" }}>
+          <div className="overline" style={{ display: "block", textAlign: "center" }}>Stay Connected</div>
+          <h2 className="serif" style={{ fontSize: 38, fontWeight: 400, color: C.textDark, marginBottom: 12 }}>
+            We Are Active, Informative &amp; Fun on Our Socials
+          </h2>
+          <p style={{ fontSize: 14.5, color: C.textMid, lineHeight: 1.8, marginBottom: 36 }}>
+            Check us out — business tips, system walkthroughs, founder insights and a lot more.
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
+            {[
+              { label: "TikTok", href: "https://tiktok.com/@saranlife", color: "#010101", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.17 8.17 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg> },
+              { label: "Instagram", href: "https://instagram.com/saranlife", color: "#E1306C", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".5" fill="currentColor" stroke="none"/></svg> },
+              { label: "LinkedIn", href: "https://linkedin.com/company/saranlife", color: "#0077B5", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg> },
+              { label: "Facebook", href: "https://facebook.com/saranlife", color: "#1877F2", icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg> },
+            ].map(({ label, href, color, icon }) => (
+              <a key={label} href={href} target="_blank" rel="noopener noreferrer"
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, color: C.textDark, textDecoration: "none", transition: "transform .2s" }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.querySelector(".icon-wrap").style.background = color; e.currentTarget.querySelector(".icon-wrap").style.color = "#fff"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.querySelector(".icon-wrap").style.background = C.creamDark; e.currentTarget.querySelector(".icon-wrap").style.color = C.textDark; }}
+              >
+                <div className="icon-wrap" style={{ width: 56, height: 56, borderRadius: "50%", background: C.creamDark, display: "flex", alignItems: "center", justifyContent: "center", transition: "all .2s", border: `1px solid ${C.border}` }}>
+                  {icon}
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 500, letterSpacing: ".06em", textTransform: "uppercase" }}>{label}</span>
+              </a>
+            ))}
           </div>
         </div>
       </section>
@@ -757,7 +799,6 @@ export default function Fundametrics() {
       {/* ── Product Detail Modal ── */}
       {selectedProduct && (() => {
         const details = PRODUCT_DETAILS[selectedProduct.id];
-        const withT = !!coaching[selectedProduct.id];
         return (
           <>
             <div onClick={() => setSelectedProduct(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 100, animation: "fadeIn .2s ease" }} />
@@ -805,15 +846,8 @@ export default function Fundametrics() {
 
               {/* Footer CTA */}
               <div style={{ padding: "20px 32px", borderTop: `1px solid ${C.border}`, background: C.cream, position: "sticky", bottom: 0 }}>
-                <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "11px 12px", background: C.cardBg, border: `1px solid ${withT ? C.gold : C.border}`, marginBottom: 14, borderRadius: 5, transition: "border-color .2s" }}>
-                  <input type="checkbox" className="chk" checked={withT} onChange={(e) => setCoaching((prev) => ({ ...prev, [selectedProduct.id]: e.target.checked }))} />
-                  <div>
-                    <div style={{ fontSize: 12.5, color: C.textDark, fontWeight: 500 }}>Add Customization + Training</div>
-                    <div style={{ fontSize: 11.5, color: C.textMuted, marginTop: 2 }}>+{fmt(TRAINING)} · tailored to your business</div>
-                  </div>
-                </label>
-                <button className="btn-dark" style={{ width: "100%", padding: "14px 0", fontSize: 13 }} onClick={() => { addToCart(selectedProduct, withT); setSelectedProduct(null); }}>
-                  Add to Cart — {fmt(selectedProduct.price + (withT ? TRAINING : 0))}
+                  <button className="btn-dark" style={{ width: "100%", padding: "14px 0", fontSize: 13 }} onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}>
+                  Add to Cart — {fmt(selectedProduct.price)}
                 </button>
               </div>
             </div>
@@ -962,6 +996,17 @@ export default function Fundametrics() {
               View Cart & Checkout
             </button>
             <button onClick={() => setCart([])} style={{ background: "none", border: "none", color: "rgba(245,240,232,.35)", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: "4px 8px" }} title="Clear cart">×</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── FOMO Toast ── */}
+      {fomoToast && (
+        <div style={{ position: "fixed", bottom: cartCount > 0 ? 90 : 24, left: 24, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 16px", zIndex: 280, maxWidth: 280, boxShadow: "0 4px 20px rgba(0,0,0,.12)", animation: "slideUp .4s ease", display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.goldPale, border: `1px solid ${C.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>🛒</div>
+          <div>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: C.textDark, marginBottom: 2 }}>{fomoToast.name} just purchased</div>
+            <div style={{ fontSize: 11.5, color: C.textMid, lineHeight: 1.4 }}>{fomoToast.product}</div>
           </div>
         </div>
       )}

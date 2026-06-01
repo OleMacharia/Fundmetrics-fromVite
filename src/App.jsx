@@ -300,6 +300,7 @@ export default function Fundametrics() {
 
   // FOMO toast
   const KENYAN_NAMES = ["Wanjiku","Kamau","Njoroge","Wambua","Mutua","Mwangi","Achieng","Odhiambo","Wanjiru","Kariuki","Kimani","Gathoni","Nyambura","Githinji","Ndegwa","Waweru","Chebet","Koech","Langat","Makena","Njeri","Wairimu","Muthoni","Gitau","Kipchoge","Muigai","Muchiri","Moraa","Shiro","Awino"];
+  const ENGLISH_NAMES = ["James","Grace","Brian","Catherine","Kevin","Sharon","Dennis","Carol","Victor","Mercy","Patrick","Faith","Samuel","Joyce","Michael","Lucy","Daniel","Ann","Peter","Jane","George","Mary","David","Ruth","John","Elizabeth","Mark","Diana","Paul","Sandra","Eric","Vivian","Ian","Lydia","Chris","Sheila","Alex","Doreen","Tony","Pauline","Steve","Irene","Roy","Agnes","Ben","Esther"];
   const OTHER_NAMES = ["Amara","Kofi","Zara","Tendai","Fatima","Emeka","Aisha","Kwame","Naledi","Sipho","Adaeze","Chidi","Seun","Nia","Tunde","Amina","Zanele","Jabari","Chiamaka","Damilola","Abena","Sekou","Yewande","Musa","Olumide","Sanaa","Kemi","Thabo","Ngozi","Babatunde","Akosua","Nadia","Lumumba","Chinwe","Dayo","Akua","Folake","Bongani","Titilayo","Razak","Imani","Jomo","Efua","Obinna","Miriam","Zainab","Kwabena","Adeola","Chinyere","Sade"];
   const FOMO_PRODUCTS = ["Financial Management System","Agents & Commission System","Inventory Management System","Sales Breakdown System","HR & Payroll System","Complete Bundle"];
   const [fomoToast, setFomoToast] = useState(null);
@@ -309,9 +310,9 @@ export default function Fundametrics() {
     let secondLastProduct = null;
 
     const showFomo = () => {
-      // 2 out of 5 chance of Kenyan name
-      const useKenyan = Math.random() < 0.4;
-      const pool = useKenyan ? KENYAN_NAMES : OTHER_NAMES;
+      // 2/5 Kenyan, 2/5 English, 1/5 other African
+      const rand = Math.random();
+      const pool = rand < 0.4 ? KENYAN_NAMES : rand < 0.8 ? ENGLISH_NAMES : OTHER_NAMES;
       const name = pool[Math.floor(Math.random() * pool.length)];
       let product;
       do {
@@ -324,7 +325,7 @@ export default function Fundametrics() {
       setTimeout(showFomo, 45000 + Math.random() * 30000);
     };
 
-    const initial = setTimeout(showFomo, 12000);
+    const initial = setTimeout(showFomo, 30000);
     return () => clearTimeout(initial);
   }, []);
 

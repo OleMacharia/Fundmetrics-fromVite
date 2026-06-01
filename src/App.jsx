@@ -310,7 +310,6 @@ export default function Fundametrics() {
     let secondLastProduct = null;
 
     const showFomo = () => {
-      // 2/5 Kenyan, 2/5 English, 1/5 other African
       const rand = Math.random();
       const pool = rand < 0.4 ? KENYAN_NAMES : rand < 0.8 ? ENGLISH_NAMES : OTHER_NAMES;
       const name = pool[Math.floor(Math.random() * pool.length)];
@@ -320,12 +319,14 @@ export default function Fundametrics() {
       } while (product === lastProduct && product === secondLastProduct);
       secondLastProduct = lastProduct;
       lastProduct = product;
-      setFomoToast({ name, product });
+      const timeOptions = ["2 hours ago","5 hours ago","yesterday","2 days ago","3 days ago","4 days ago","5 days ago","1 week ago","2 weeks ago"];
+      const time = timeOptions[Math.floor(Math.random() * timeOptions.length)];
+      setFomoToast({ name, product, time });
       setTimeout(() => setFomoToast(null), 4500);
-      setTimeout(showFomo, 45000 + Math.random() * 30000);
+      setTimeout(showFomo, 30000 + Math.random() * 10000);
     };
 
-    const initial = setTimeout(showFomo, 30000);
+    const initial = setTimeout(showFomo, 20000);
     return () => clearTimeout(initial);
   }, []);
 
@@ -1006,8 +1007,12 @@ export default function Fundametrics() {
         <div style={{ position: "fixed", bottom: cartCount > 0 ? 90 : 24, left: 24, background: "#fff", border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 16px", zIndex: 280, maxWidth: 280, boxShadow: "0 4px 20px rgba(0,0,0,.12)", animation: "slideUp .4s ease", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.goldPale, border: `1px solid ${C.gold}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>🛒</div>
           <div>
-            <div style={{ fontSize: 12.5, fontWeight: 600, color: C.textDark, marginBottom: 2 }}>{fomoToast.name} just purchased</div>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: C.textDark, marginBottom: 2 }}>{fomoToast.name} purchased</div>
             <div style={{ fontSize: 11.5, color: C.textMid, lineHeight: 1.4 }}>{fomoToast.product}</div>
+            <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              {fomoToast.time}
+            </div>
           </div>
         </div>
       )}

@@ -258,40 +258,39 @@ export default function Fundametrics() {
 
   const removeItem = (id) => setCart((prev) => prev.filter((i) => i.id !== id));
 
-  // IntaSend — Kenya (M-Pesa + local cards)
-  const checkoutIntaSend = () => {
-    const btn = document.getElementById("intasend-hidden-btn");
-    if (btn) {
-      btn.setAttribute("data-amount", cartTotal);
-      btn.setAttribute("data-api_ref", `FDM-${Date.now()}`);
-      btn.click();
-    } else { notify("Payment system loading, please try again."); }
-  };
-
-  // Stripe — International cards
-  const checkoutStripe = () => {
-    // Replace with your Stripe Payment Link URL
-    // Create one at: dashboard.stripe.com → Payment Links → + New
-    const stripeLink = "YOUR_STRIPE_PAYMENT_LINK_URL";
-    if (stripeLink === "YOUR_STRIPE_PAYMENT_LINK_URL") {
-      notify("Stripe payment link not configured yet.");
+  // Paystack checkout
+  const checkout = () => {
+    if (typeof window.PaystackPop === "undefined") {
+      notify("Payment system loading, please try again.");
       return;
     }
-    window.open(stripeLink, "_blank");
+    const handler = window.PaystackPop.setup({
+      key: "YOUR_PAYSTACK_OR_INTASEND_KEY_HERE", // ← 🔑 PASTE YOUR PAYSTACK PUBLIC KEY HERE (pk_live_...)
+      amount: cartTotal * 100, // Paystack requires amount in kobo/cents
+      currency: "KES",
+      channels: ["card", "mobile_money", "bank_transfer"],
+      ref: `FDM-${Date.now()}`,
+      label: "Fundametrics",
+      metadata: {
+        custom_fields: [
+          { display_name: "Items", variable_name: "items", value: cart.map(i => i.name).join(", ") }
+        ]
+      },
+      callback: (response) => {
+        if (response.status === "success") {
+          setCart([]);
+          setCartOpen(false);
+          notify("Payment successful! Check your email for your download link.");
+        }
+      },
+      onClose: () => {},
+    });
+    handler.openIframe();
   };
 
   useEffect(() => {
     const s = document.createElement("script");
-    s.src = "https://unpkg.com/intasend-inlinejs-sdk@4.0.5/build/intasend-inline.js";
-    s.onload = () => {
-      new window.IntaSend({
-        publicAPIKey: "YOUR_INTASEND_PUBLIC_KEY", // ← Replace with your IntaSend publishable key
-        live: false, // ← Change to true when going live
-      })
-        .on("COMPLETE", () => { setCart([]); setCartOpen(false); notify("Payment successful! Check your email for your download link."); })
-        .on("FAILED", () => notify("Payment failed. Please try again."))
-        .on("IN-PROGRESS", () => notify("Processing payment..."));
-    };
+    s.src = "https://js.paystack.co/v1/inline.js";
     document.head.appendChild(s);
     return () => { try { document.head.removeChild(s); } catch (e) {} };
   }, []);
@@ -944,36 +943,12 @@ export default function Fundametrics() {
                     <span className="serif" style={{ fontSize: 22, color: C.textDark, fontWeight: 500 }}>{fmt(cartTotal)}</span>
                   </div>
 
-                  {/* IntaSend — Kenya */}
-                  <button className="btn-dark" style={{ width: "100%", padding: "13px 0", fontSize: 12, marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={checkoutIntaSend}>
-                    <span>🇰🇪</span> Pay with M-Pesa / Kenya Card
+                  <button className="btn-dark" style={{ width: "100%", padding: "14px 0", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={checkout}>
+                    <span>🔒</span> Pay Securely via Paystack
                   </button>
-
-                  {/* Divider */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "4px 0 10px" }}>
-                    <div style={{ flex: 1, height: 1, background: C.border }} />
-                    <span style={{ fontSize: 11, color: C.textMuted, letterSpacing: ".08em", textTransform: "uppercase" }}>or</span>
-                    <div style={{ flex: 1, height: 1, background: C.border }} />
-                  </div>
-
-                  {/* Stripe — International */}
-                  <button className="btn-outline" style={{ width: "100%", padding: "12px 0", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={checkoutStripe}>
-                    <span>🌍</span> Pay with International Card (Stripe)
-                  </button>
-
-                  <p style={{ fontSize: 11, color: C.textMuted, marginTop: 14, lineHeight: 1.65, textAlign: "center" }}>
-                    A unique download link is emailed instantly after payment.
+                  <p style={{ fontSize: 11, color: C.textMuted, marginTop: 12, lineHeight: 1.65, textAlign: "center" }}>
+                    M-Pesa, Visa, Mastercard & bank transfer accepted. Download link emailed instantly after payment.
                   </p>
-
-                  {/* Hidden IntaSend trigger button */}
-                  <button
-                    id="intasend-hidden-btn"
-                    className="intaSendPayButton"
-                    data-amount={cartTotal}
-                    data-currency="KES"
-                    data-api_ref={`FDM-${Date.now()}`}
-                    style={{ display: "none" }}
-                  />
                 </div>
               </>
             )}

@@ -265,7 +265,7 @@ export default function Fundametrics() {
       return;
     }
     const handler = window.PaystackPop.setup({
-      key: "pk_live_cf43bbade692a8f62dc597f4da43329148676d2eARCLtd2026", // ← 🔑 PASTE YOUR PAYSTACK PUBLIC KEY HERE (pk_live_...)
+      key: "pk_live_cf43bbade692a8f62dc597f4da43329148676d2e", // ← 🔑 PASTE YOUR PAYSTACK PUBLIC KEY HERE (pk_live_...)
       amount: cartTotal * 100, // Paystack requires amount in kobo/cents
       currency: "KES",
       channels: ["card", "mobile_money", "bank_transfer"],

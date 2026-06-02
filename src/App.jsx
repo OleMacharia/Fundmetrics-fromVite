@@ -70,9 +70,9 @@ const PRODUCT_DETAILS = {
     ],
   },
   5: {
-    entry: "Staff Records — Employee names, salaries, tax bands, NHIF/NSSF tiers, leave entitlements and bank details go in once. Everything else runs from there.",
+    entry: "Staff Records — Employee names, salaries, tax bands, statutory deduction tiers, leave entitlements and bank details go in once. Everything else runs from there.",
     features: [
-      ["Monthly Payroll Run", "Gross pay, all statutory deductions (PAYE, NHIF, NSSF, Housing Levy), net pay and bank transfer amounts for every employee — calculated the moment the pay period is set."],
+      ["Monthly Payroll Run", "Gross pay, all statutory deductions compliant with your country's tax system (income tax, social security, health contributions and any applicable levies), net pay and bank transfer amounts for every employee — calculated the moment the pay period is set."],
       ["Individual Payslips", "A fully formatted payslip for every employee, auto-populated with their name, period, earnings and all deductions. Ready to share or print immediately."],
       ["Leave Tracker", "Each employee's annual entitlement, days taken and remaining balance — updating in real time as leave is recorded."],
       ["Salary Advance Tracker", "Logs advance amounts and repayment schedules, with automatic deductions appearing in the payslip when repayments fall due. No manual tracking needed."],
@@ -265,7 +265,7 @@ export default function Fundametrics() {
       return;
     }
     const handler = window.PaystackPop.setup({
-      key: "YOUR_PAYSTACK_OR_INTASEND_KEY_HERE", // ← 🔑 PASTE YOUR PAYSTACK PUBLIC KEY HERE (pk_live_...)
+      key: "pk_live_cf43bbade692a8f62dc597f4da43329148676d2eARCLtd2026", // ← 🔑 PASTE YOUR PAYSTACK PUBLIC KEY HERE (pk_live_...)
       amount: cartTotal * 100, // Paystack requires amount in kobo/cents
       currency: "KES",
       channels: ["card", "mobile_money", "bank_transfer"],

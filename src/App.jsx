@@ -226,6 +226,8 @@ export default function Fundametrics() {
   const [cartOpen, setCartOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [checkoutEmail, setCheckoutEmail] = useState("");
+  const [checkoutPhone, setCheckoutPhone] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
@@ -264,8 +266,15 @@ export default function Fundametrics() {
       notify("Payment system loading, please try again.");
       return;
     }
+    // Validate email
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkoutEmail);
+    if (!emailValid) {
+      notify("Please enter a valid email address to continue.");
+      return;
+    }
     const handler = window.PaystackPop.setup({
       key: "pk_live_cf43bbade692a8f62dc597f4da43329148676d2e", // ← 🔑 PASTE YOUR PAYSTACK PUBLIC KEY HERE (pk_live_...)
+      email: checkoutEmail,
       amount: cartTotal * 100, // Paystack requires amount in kobo/cents
       currency: "KES",
       channels: ["card", "mobile_money", "bank_transfer"],
@@ -273,7 +282,8 @@ export default function Fundametrics() {
       label: "Fundametrics",
       metadata: {
         custom_fields: [
-          { display_name: "Items", variable_name: "items", value: cart.map(i => i.name).join(", ") }
+          { display_name: "Items", variable_name: "items", value: cart.map(i => i.name).join(", ") },
+          { display_name: "Phone", variable_name: "phone", value: checkoutPhone || "Not provided" }
         ]
       },
       callback: (response) => {
@@ -943,6 +953,29 @@ export default function Fundametrics() {
                     <span className="serif" style={{ fontSize: 22, color: C.textDark, fontWeight: 500 }}>{fmt(cartTotal)}</span>
                   </div>
 
+                  <div style={{ marginBottom: 12 }}>
+                    <input
+                      type="email"
+                      value={checkoutEmail}
+                      onChange={(e) => setCheckoutEmail(e.target.value)}
+                      placeholder="Your email address *"
+                      style={{ width: "100%", padding: "11px 13px", fontSize: 13, border: `1px solid ${C.border}`, borderRadius: 5, background: "#fff", color: C.textDark, fontFamily: "inherit", outline: "none", marginBottom: 8 }}
+                      onFocus={e => e.target.style.borderColor = C.gold}
+                      onBlur={e => e.target.style.borderColor = C.border}
+                    />
+                    <input
+                      type="tel"
+                      value={checkoutPhone}
+                      onChange={(e) => setCheckoutPhone(e.target.value)}
+                      placeholder="Phone number (optional)"
+                      style={{ width: "100%", padding: "11px 13px", fontSize: 13, border: `1px solid ${C.border}`, borderRadius: 5, background: "#fff", color: C.textDark, fontFamily: "inherit", outline: "none" }}
+                      onFocus={e => e.target.style.borderColor = C.gold}
+                      onBlur={e => e.target.style.borderColor = C.border}
+                    />
+                    <p style={{ fontSize: 10.5, color: C.textMuted, marginTop: 6, lineHeight: 1.5 }}>
+                      Your download link will be sent to this email after payment.
+                    </p>
+                  </div>
                   <button className="btn-dark" style={{ width: "100%", padding: "14px 0", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={checkout}>
                     <span>🔒</span> Pay Securely via Paystack
                   </button>
